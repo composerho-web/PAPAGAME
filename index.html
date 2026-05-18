@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爸爸玩時間: 侯爸爸的玩轉親子靈感庫</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <!-- 匯入 html2pdf.js 庫用於匯出 PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f9fafb; scroll-behavior: smooth; }
+        .hover-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        
+        .article-body p { line-height: 1.8; margin-bottom: 1.5rem; font-size: 1.125rem; color: #374151; }
+        .article-body h2 { font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 3px solid #fde68a; display: inline-block; padding-bottom: 4px; }
+        
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #f59e0b; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 動態淡入動畫 */
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* 數字跳動特效 */
+        .counter-pulse { animation: pulseIcon 1.5s infinite; }
+        @keyframes pulseIcon { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; border-left: 4px solid #f59e0b; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 12px 20px; border-radius: 4px; font-weight: bold; transform: translateX(120%); transition: transform 0.3s ease-out; }
+        .toast.show { transform: translateX(0); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+
+        /* PDF 列印隱藏元素 */
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- 頂部導航列 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 no-print">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2 text-amber-500 font-black text-xl md:text-3xl cursor-pointer" onclick="switchView('home')">
+                <i class="fas fa-puzzle-piece"></i>
+                <h1>爸爸玩時間: 侯爸爸的玩轉親子靈感庫</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="checkAdminAccess()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-cog"></i> <span class="hidden md:inline">作者後台</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="global-loading" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center no-print hidden">
+        <div class="loader mb-4" style="width: 50px; height: 50px; border-width: 5px;"></div>
+        <p class="text-gray-600 font-bold" id="loading-text">正在處理中...</p>
+    </div>
+
+    <!-- 前台：首頁 -->
+    <main id="view-home" class="max-w-6xl mx-auto px-4 py-8 relative">
+        
+        <!-- 動態輪播橫幅區塊 -->
+        <div id="banner-slider" class="relative bg-white rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row overflow-hidden min-h-[250px] transition-all">
+            <!-- 由 JS 動態填入輪播內容 -->
+        </div>
+
+        <!-- 網站說明區 -->
+        <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-6 mb-8 text-gray-700 shadow-sm relative overflow-hidden" id="site-description-container">
+            <!-- 由 JS 動態填入說明內容 -->
+        </div>
+
+        <!-- 作者簡介區 (可愛風) -->
+        <div id="author-profile-container" class="hidden bg-pink-50 border-2 border-pink-200 rounded-[2rem] p-6 mb-8 shadow-sm relative overflow-hidden flex-col md:flex-row gap-6 items-center transform hover:scale-[1.01] transition-transform">
+            <div class="absolute -bottom-4 -right-4 text-pink-200/50 z-0">
+                <i class="fas fa-heart text-8xl"></i>
+            </div>
+            <!-- 圖片自動輪播 -->
+            <div class="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-full border-4 border-white shadow-lg overflow-hidden relative bg-pink-100 flex items-center justify-center z-10">
+                <img id="author-carousel-img" src="" class="w-full h-full object-cover hidden transition-opacity duration-300">
+                <i id="author-carousel-icon" class="fas fa-user-astronaut text-5xl text-pink-300"></i>
+            </div>
+            <!-- 文字與連結 -->
+            <div class="flex-1 z-10 text-center md:text-left">
+                <h3 class="font-black text-pink-600 text-xl md:text-2xl mb-3 flex items-center justify-center md:justify-start gap-2">
+                    <i class="fas fa-star text-yellow-400"></i> 關於作者
+                </h3>
+                <p id="author-bio-text" class="text-gray-700 text-sm md:text-base leading-relaxed mb-4 whitespace-pre-wrap"></p>
+                <div id="author-links-container" class="flex flex-wrap justify-center md:justify-start gap-3">
+                    <!-- 動態產生連結按鈕 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 活潑首頁計數器 -->
+        <div class="flex justify-center mb-10">
+            <div class="bg-gradient-to-r from-orange-400 to-amber-500 text-white px-8 py-3 rounded-full shadow-lg flex items-center gap-3 transform hover:scale-105 transition duration-300 border-4 border-white">
+                <i class="fas fa-fire counter-pulse text-2xl text-yellow-200"></i>
+                <span class="font-bold text-lg md:text-xl">本站累積靈感探索：</span>
+                <span id="site-total-views" class="text-3xl md:text-4xl font-black tracking-wider text-yellow-100 drop-shadow-md">0</span>
+                <span class="font-bold text-lg md:text-xl">次</span>
+            </div>
+        </div>
+
+        <!-- 標籤過濾與排序區 -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div class="flex flex-wrap gap-2" id="home-tag-filters">
+                <!-- 從資料庫動態載入 -->
+            </div>
+            <!-- 排序下拉選單 -->
+            <div class="flex items-center shrink-0 bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-1.5">
+                <i class="fas fa-sort-amount-down text-gray-400 mr-2"></i>
+                <select id="sort-articles" onchange="sortAndRenderArticles()" class="bg-transparent text-sm font-bold text-gray-700 outline-none cursor-pointer">
+                    <option value="newest">最新發布</option>
+                    <option value="popular">人氣最高</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 文章列表 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="article-list-container">
+            <!-- 文章卡片會由 JS 動態生成 -->
+        </div>
+        
+        <div id="no-articles-msg" class="text-center py-20 hidden">
+            <i class="fas fa-folder-open text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 font-bold">目前還沒有文章喔，請前往後台發布第一篇吧！</p>
+        </div>
+    </main>
+
+    <!-- 前台：文章閱讀頁 -->
+    <main id="view-read" class="hidden max-w-3xl mx-auto px-4 py-8 pb-24">
+        <button onclick="switchView('home')" class="mb-6 text-gray-500 hover:text-amber-600 font-bold text-sm flex items-center transition no-print">
+            <i class="fas fa-arrow-left mr-2"></i> 返回靈感庫
+        </button>
+
+        <article id="printable-article" class="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100 relative">
+            <div class="flex gap-2 mb-4" id="read-tags"></div>
+            <h1 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-4" id="read-title">標題載入中...</h1>
+            
+            <div class="flex items-center justify-between border-b border-gray-100 pb-6 mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold text-xl">侯</div>
+                    <div>
+                        <p class="text-sm font-bold text-gray-800 mb-1">作者: 侯惠澤 <span class="font-normal text-xs text-gray-500">(爸爸貝鳥/台科大特聘教授)</span></p>
+                        <div class="flex items-center flex-wrap gap-2 text-xs">
+                            <span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded" id="read-category">分類名稱</span>
+                            <span class="text-gray-500" id="read-date">2026-05-16</span>
+                            <span class="text-orange-500 font-bold" id="read-views-count"><i class="fas fa-fire mr-1"></i>0 次點閱</span>
+                            <span class="text-gray-400">｜ <i class="fas fa-share-nodes mr-1"></i>歡迎分享社群媒體或下載</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2 no-print shrink-0">
+                    <button onclick="exportToPDF()" class="bg-gray-700 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-800 transition shadow-sm" title="匯出 PDF 檔案"><i class="fas fa-file-pdf"></i></button>
+                    <button onclick="shareToLine()" class="bg-[#00B900] text-white w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition shadow-sm" title="分享至 LINE"><i class="fab fa-line text-xl"></i></button>
+                    <button onclick="shareToFB()" class="bg-[#1877F2] text-white w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition shadow-sm" title="分享至 Facebook"><i class="fab fa-facebook-f"></i></button>
+                </div>
+            </div>
+
+            <!-- 圖片與圖片來源區塊 -->
+            <div id="read-image-wrapper" class="hidden mb-10">
+                <img id="read-hero-image" src="" alt="文章封面" class="w-full rounded-xl shadow-sm object-cover max-h-[400px]">
+                <p class="text-xs text-gray-400 text-center mt-2 font-bold">圖片來源: 免費圖庫或作者提供</p>
+            </div>
+
+            <div class="article-body text-gray-700" id="read-content"></div>
+            
+            <!-- 列印/PDF 專用水印 (一般畫面隱藏) -->
+            <div class="hidden print:block mt-12 pt-6 border-t border-gray-200 text-center text-gray-400 text-sm">
+                文章來源：爸爸玩時間 玩轉親子靈感庫
+            </div>
+        </article>
+    </main>
+
+    <!-- 登入驗證頁面 -->
+    <main id="view-login" class="hidden max-w-md mx-auto px-4 py-20">
+        <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 text-center">
+            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2 class="text-2xl font-black text-gray-800 mb-2">版主身分驗證</h2>
+            <p class="text-gray-500 text-sm mb-6">請輸入管理員通行碼以進入後台。<br><span class="text-xs text-amber-600">(預設通行碼為：admin123)</span></p>
+            <input type="password" id="admin-passcode" placeholder="請輸入通行碼..." class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-amber-500 outline-none text-center tracking-widest font-bold">
+            <button onclick="verifyAdmin()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition shadow-md flex justify-center items-center gap-2">
+                <span id="btn-login-text">確認登入</span>
+                <div id="btn-login-loader" class="loader hidden" style="width: 16px; height: 16px; border-width: 2px; border-top-color: white;"></div>
+            </button>
+            <button onclick="switchView('home')" class="mt-4 text-sm font-bold text-gray-500 hover:text-gray-800 transition">取消返回</button>
+        </div>
+    </main>
+
+    <!-- 後台管理頁面 -->
+    <main id="view-admin" class="hidden h-[calc(100vh-64px)] overflow-hidden flex flex-col md:flex-row bg-gray-100 no-print">
+        
+        <!-- 左側：設定表單區 -->
+        <div class="w-full md:w-1/2 bg-white border-r border-gray-200 flex flex-col h-full overflow-y-auto custom-scrollbar z-10 shadow-lg">
+            <div class="flex border-b border-gray-200 sticky top-0 bg-white z-20 text-sm">
+                <button onclick="switchAdminTab('publish')" id="tab-publish" class="flex-1 py-4 font-bold text-amber-600 border-b-2 border-amber-600">發布/編輯</button>
+                <button onclick="switchAdminTab('manage')" id="tab-manage" class="flex-1 py-4 font-bold text-gray-500 hover:text-amber-500">文章管理</button>
+                <button onclick="switchAdminTab('tags')" id="tab-tags" class="flex-1 py-4 font-bold text-gray-500 hover:text-amber-500">分類與標籤</button>
+                <button onclick="switchAdminTab('settings')" id="tab-settings" class="flex-1 py-4 font-bold text-gray-500 hover:text-amber-500">網站設定</button>
+            </div>
+
+            <!-- 1. 發布/編輯文章表單 -->
+            <div id="admin-panel-publish" class="p-6">
+                <!-- 真實上傳 Word 區 -->
+                <div class="bg-blue-50 border-2 border-dashed border-blue-200 rounded-xl p-6 text-center mb-6 hover:bg-blue-100 transition">
+                    <i class="fas fa-file-word text-4xl text-blue-500 mb-3"></i>
+                    <h3 class="text-gray-800 font-bold mb-1">上傳 Word 檔案 (.docx)</h3>
+                    <p class="text-xs text-gray-500 mb-4">系統將自動讀取內容，並進行基本排版處理</p>
+                    <input type="file" id="word-upload" accept=".docx" class="hidden" onchange="handleWordUpload(event)">
+                    <label for="word-upload" class="cursor-pointer inline-block bg-white border border-gray-300 text-blue-600 px-6 py-2.5 rounded-lg hover:bg-white transition shadow-sm text-sm font-bold">
+                        <i class="fas fa-upload mr-1"></i> 選擇檔案
+                    </label>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">網頁標題 (Title)</label>
+                        <input type="text" id="admin-title" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">社群分享摘要 (Description)</label>
+                        <textarea id="admin-summary" rows="2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">主分類</label>
+                            <select id="admin-category" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" onchange="updateAdminPreview()"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">封面圖片網址 (URL)</label>
+                            <input type="text" id="admin-image" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="貼上網址即時預覽">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">選擇標籤 (多選)</label>
+                        <div class="flex flex-wrap gap-2" id="admin-tags-container"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">文章內文 (支援 HTML)</label>
+                        <textarea id="admin-content" rows="12" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none font-mono text-sm custom-scrollbar"></textarea>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="publishArticle()" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-bold py-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+                            <span id="btn-publish-text">儲存並發布上架</span>
+                            <div id="btn-publish-loader" class="loader hidden" style="width: 20px; height: 20px; border-width: 3px; border-top-color: white;"></div>
+                        </button>
+                        <button id="btn-cancel-edit" onclick="resetAdminForm()" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-4 px-6 rounded-xl transition shadow-sm">取消</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 文章管理列表 -->
+            <div id="admin-panel-manage" class="p-6 hidden">
+                <h3 class="font-bold text-gray-800 text-lg mb-4"><i class="fas fa-list text-amber-500 mr-2"></i>已發布文章列表</h3>
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <ul id="admin-article-list" class="divide-y divide-gray-100"></ul>
+                </div>
+            </div>
+
+            <!-- 3. 標籤與分類管理表單 -->
+            <div id="admin-panel-tags" class="p-6 hidden">
+                <div class="mb-8 border-b border-gray-200 pb-8">
+                    <h3 class="font-bold text-gray-800 text-lg mb-4"><i class="fas fa-folder-open text-amber-500 mr-2"></i>主分類管理</h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="new-category-name" placeholder="輸入新分類名稱" class="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                        <button onclick="addNewCategory()" class="bg-amber-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-600 transition min-w-[80px]">新增</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2" id="admin-category-list"></div>
+                </div>
+
+                <div class="bg-blue-50 rounded-xl p-5 border border-blue-100 mb-6">
+                    <h3 class="font-bold text-blue-800 mb-3"><i class="fas fa-tags mr-2"></i>新增標籤 (Tags)</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-tag-name" placeholder="標籤名稱" class="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <select id="new-tag-color" class="w-24 border border-gray-300 rounded-lg p-2.5 text-sm outline-none">
+                            <option value="orange">橘色</option>
+                            <option value="blue">藍色</option>
+                            <option value="pink">粉色</option>
+                            <option value="green">綠色</option>
+                            <option value="purple">紫色</option>
+                        </select>
+                        <button onclick="addNewTag()" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition min-w-[80px]">新增</button>
+                    </div>
+                </div>
+                <h3 class="font-bold text-gray-700 mb-3">現有標籤清單</h3>
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <ul id="admin-tag-list" class="divide-y divide-gray-100"></ul>
+                </div>
+            </div>
+
+            <!-- 4. 網站設定區 (橫幅與說明) -->
+            <div id="admin-panel-settings" class="p-6 hidden">
+                <div class="mb-10 border-b border-gray-200 pb-8">
+                    <h3 class="font-bold text-gray-800 text-lg mb-2"><i class="fas fa-info-circle text-amber-500 mr-2"></i>網站說明區 (最多 300 字)</h3>
+                    <p class="text-xs text-gray-500 mb-4">未來可以擺上網站成立宗旨與資料的來源，會顯示在首頁橫幅下方。</p>
+                    <textarea id="admin-site-desc" rows="4" maxlength="300" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none custom-scrollbar" placeholder="請輸入網站宗旨..."></textarea>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs text-gray-400" id="site-desc-count">0/300</span>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="font-bold text-pink-500 text-lg mb-2"><i class="fas fa-user-edit mr-2"></i>作者簡介區 (可愛風，最多 500 字)</h3>
+                        <textarea id="admin-author-bio" rows="5" maxlength="500" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-pink-500 outline-none custom-scrollbar mb-2" placeholder="請輸入作者簡介..."></textarea>
+                        
+                        <div class="bg-pink-50 rounded-xl p-4 border border-pink-100 mb-4">
+                            <h4 class="font-bold text-pink-700 text-sm mb-2"><i class="fas fa-camera-retro mr-1"></i>輪播圖片設定</h4>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="new-author-img" placeholder="請貼上圖片網址" class="flex-1 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-pink-400">
+                                <button onclick="addAuthorImg()" class="bg-pink-400 text-white px-4 py-2 rounded-lg font-bold hover:bg-pink-500 transition text-sm whitespace-nowrap">加入圖片</button>
+                            </div>
+                            <div id="admin-author-img-list" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div class="bg-purple-50 rounded-xl p-4 border border-purple-100 mb-4">
+                            <h4 class="font-bold text-purple-700 text-sm mb-2"><i class="fas fa-link mr-1"></i>相關連結設定</h4>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="new-link-title" placeholder="按鈕標題 (如: 粉絲專頁)" class="w-1/3 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-purple-400">
+                                <input type="text" id="new-link-url" placeholder="網址 URL" class="flex-1 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-purple-400">
+                                <button onclick="addAuthorLink()" class="bg-purple-400 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-500 transition text-sm whitespace-nowrap">加入連結</button>
+                            </div>
+                            <ul id="admin-author-link-list" class="space-y-2"></ul>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-6">
+                        <button onclick="saveAllSiteSettings()" class="bg-gradient-to-r from-amber-500 to-pink-500 text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition shadow-md transform hover:-translate-y-1">
+                            儲存全部網站與作者設定
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2"><i class="fas fa-images text-amber-500 mr-2"></i>輪播橫幅管理 (預設 5 秒更換)</h3>
+                    <p class="text-xs text-gray-500 mb-4">設定首頁上方的輪播圖片與文字，可設定多組。</p>
+                    
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">橫幅大標題</label>
+                                <input type="text" id="new-banner-title" placeholder="例如：今天想玩點什麼？" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">右側圖片網址 (URL)</label>
+                                <input type="text" id="new-banner-image" placeholder="貼上圖片 URL" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">短文 (30字內)</label>
+                                <input type="text" id="new-banner-desc" maxlength="30" placeholder="例如：不用買昂貴教具，用家裡的零碎物品..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-gray-400">
+                            </div>
+                        </div>
+                        <button onclick="addBanner()" class="w-full bg-gray-800 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-gray-900 transition flex items-center justify-center">
+                            新增橫幅
+                        </button>
+                    </div>
+                    
+                    <h4 class="font-bold text-gray-700 mb-3 text-sm">現有橫幅清單</h4>
+                    <ul id="admin-banner-list" class="space-y-3"></ul>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右側：即時預覽區 -->
+        <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col relative overflow-hidden bg-gray-200" id="admin-preview-area">
+            <div class="flex justify-center gap-2 mb-4 z-20">
+                <button onclick="switchPreviewMode('mobile')" id="btn-prev-mobile" class="bg-gray-800 text-white px-5 py-2 rounded-full text-sm font-bold shadow-md transition transform hover:scale-105"><i class="fas fa-mobile-alt mr-1"></i> 手機版</button>
+                <button onclick="switchPreviewMode('desktop')" id="btn-prev-desktop" class="bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-bold shadow-md hover:bg-gray-50 transition transform hover:scale-105"><i class="fas fa-desktop mr-1"></i> 電腦版內文</button>
+            </div>
+            
+            <div id="preview-mobile-view" class="flex-1 flex justify-center items-start overflow-y-auto custom-scrollbar z-10 w-full py-4">
+                <div class="w-[320px] bg-white rounded-[2rem] shadow-2xl border-8 border-gray-800 overflow-hidden flex flex-col shrink-0 min-h-[600px]">
+                    <div class="p-4 border-b-4 border-gray-100 bg-gray-50">
+                        <p class="text-[10px] text-gray-400 font-bold mb-2">首頁卡片預覽</p>
+                        <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                            <div class="bg-amber-50 h-32 relative overflow-hidden flex items-center justify-center">
+                                <img id="prev-list-img" src="" class="hidden w-full h-full object-cover">
+                                <i id="prev-list-icon" class="fas fa-puzzle-piece text-4xl text-amber-400 z-10"></i>
+                            </div>
+                            <div class="p-3">
+                                <div class="text-[10px] font-bold text-amber-600 mb-1" id="prev-list-category">主分類</div>
+                                <h3 class="font-black text-gray-800 text-sm mb-1 line-clamp-2" id="prev-list-title">請輸入標題</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="preview-desktop-view" class="hidden flex-1 overflow-y-auto custom-scrollbar z-10 bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-4xl mx-auto flex-col">
+                <div class="p-6 md:p-10" id="prev-article-full">
+                    <h1 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight mb-6" id="prev-desk-title">請輸入標題</h1>
+                    
+                    <!-- 預覽版的圖片區塊 -->
+                    <div id="prev-desk-image-wrapper" class="hidden mb-10">
+                        <img id="prev-desk-img" src="" class="w-full rounded-xl shadow-sm object-cover max-h-[300px]">
+                        <p class="text-xs text-gray-400 text-center mt-2 font-bold">圖片來源: 免費圖庫或作者提供</p>
+                    </div>
+
+                    <div class="article-body text-gray-700" id="prev-desk-content">請輸入文章內容...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // ==========================================
+        // 系統設定區
+        // ==========================================
+        // ★ 請將這裡替換成您剛剛部署完成的 Google Apps Script 網址
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbRxa554C_kEf3Ac_J-qVo_TxL7c6esQLtVwwps6h4RN-p6d1gAP0dbiE_4QC4JVWIpg/exec"; 
+
+        let isAdmin = false; 
+        let currentView = 'home';
+        let currentReadArticleId = null;
+        let editingArticleId = null; 
+        let selectedTagsForPost = [];
+        
+        let dbArticles = [];
+        let dbTags = [];
+        let dbCategories = [];
+        let dbBanners = [];
+        let dbSiteInfo = [];
+        
+        let totalSiteViews = 0; 
+        let currentBannerIndex = 0;
+        let bannerInterval = null;
+        let currentFilterTagId = null;
+        
+        // 新增作者簡介狀態變數
+        let tempAuthorImages = [];
+        let tempAuthorLinks = [];
+        let authorCarouselInterval = null;
+        let currentAuthorImgIndex = 0;
+
+        window.onload = function() { initApp(); };
+
+        async function initApp() {
+            showGlobalLoading(true, "正在連接資料庫...");
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getInitData`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    dbArticles = data.articles || [];
+                    dbTags = data.tags || [];
+                    dbCategories = data.categories || [];
+                    dbBanners = data.banners || [];
+                    dbSiteInfo = data.siteInfo || [];
+                    
+                    totalSiteViews = 0;
+                    dbArticles.forEach(art => {
+                        art.views = parseInt(art.views) || 0;
+                        totalSiteViews += art.views;
+                    });
+                    
+                    dbArticles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    if(dbCategories.length === 0) dbCategories = [{id: 'temp-1', name: "動手建構與創客"}];
+
+                    renderCategories();
+                    renderHomeTags(); 
+                    sortAndRenderArticles(); 
+                    renderAdminTags();
+                    renderAdminArticles();
+                    
+                    renderBanners();
+                    renderSiteInfo();
+                    renderAdminBanners();
+                    if (dbSiteInfo.length > 0) {
+                        document.getElementById('admin-site-desc').value = dbSiteInfo[0].description || '';
+                        document.getElementById('admin-author-bio').value = dbSiteInfo[0].authorBio || '';
+                        try { tempAuthorImages = JSON.parse(dbSiteInfo[0].authorImages || "[]"); } catch(e) { tempAuthorImages = []; }
+                        try { tempAuthorLinks = JSON.parse(dbSiteInfo[0].authorLinks || "[]"); } catch(e) { tempAuthorLinks = []; }
+                        updateSiteDescCount();
+                        renderAdminAuthorImgs();
+                        renderAdminAuthorLinks();
+                        renderAuthorProfile(); // 渲染前台作者簡介
+                    }
+
+                    animateTotalViewsCounter();
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("連線失敗，請檢查網路或網址", "error");
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        // 數字滾動動畫函數
+        function animateTotalViewsCounter() {
+            const el = document.getElementById('site-total-views');
+            let start = totalSiteViews - 500; 
+            if (start < 0) start = 0;
+            const end = totalSiteViews;
+            const duration = 2000;
+            const increment = end > start ? (end - start) / (duration / 16) : 0; 
+            
+            if (increment === 0) {
+                el.textContent = end.toLocaleString();
+                return;
+            }
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= end) {
+                    clearInterval(timer);
+                    el.textContent = end.toLocaleString();
+                } else {
+                    el.textContent = Math.floor(start).toLocaleString();
+                }
+            }, 16);
+        }
+
+        // ==========================================
+        // 橫幅與說明管理
+        // ==========================================
+        function renderBanners() {
+            const slider = document.getElementById('banner-slider');
+            clearInterval(bannerInterval);
+
+            if (dbBanners.length === 0) {
+                slider.innerHTML = `
+                    <div class="flex-1 p-8 md:p-12 flex flex-col justify-center animate-fade-in">
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-800 mb-4 leading-tight">今天想玩點什麼？</h2>
+                        <p class="text-gray-500 text-lg">不用買昂貴教具，用家裡的零碎物品，玩出孩子的大能力！</p>
+                    </div>
+                    <div class="w-full md:w-2/5 h-48 md:h-auto bg-amber-100 flex items-center justify-center">
+                        <i class="fas fa-puzzle-piece text-7xl text-amber-300"></i>
+                    </div>
+                `;
+                return;
+            }
+
+            const renderSingleBanner = (index) => {
+                const banner = dbBanners[index];
+                slider.innerHTML = `
+                    <div class="flex-1 p-8 md:p-12 flex flex-col justify-center animate-fade-in relative z-10 bg-white md:bg-transparent">
+                        <h2 class="text-3xl md:text-4xl font-black text-gray-800 mb-4 leading-tight">${banner.title}</h2>
+                        <p class="text-gray-500 text-lg">${banner.desc}</p>
+                    </div>
+                    <div class="w-full md:w-2/5 h-48 md:h-auto bg-gray-100 flex items-center justify-center relative">
+                        ${banner.imageUrl ? `<img src="${banner.imageUrl}" class="absolute inset-0 w-full h-full object-cover" alt="Banner">` : `<i class="fas fa-image text-5xl text-gray-300"></i>`}
+                    </div>
+                `;
+            };
+
+            renderSingleBanner(currentBannerIndex);
+
+            if (dbBanners.length > 1) {
+                bannerInterval = setInterval(() => {
+                    currentBannerIndex = (currentBannerIndex + 1) % dbBanners.length;
+                    renderSingleBanner(currentBannerIndex);
+                }, 5000); 
+            }
+        }
+
+        function renderSiteInfo() {
+            const container = document.getElementById('site-description-container');
+            let desc = "這是網站說明區，未來可以擺上網站成立宗旨與資料的來源。";
+            if (dbSiteInfo.length > 0 && dbSiteInfo[0].description) {
+                desc = dbSiteInfo[0].description;
+            }
+            container.innerHTML = `
+                <div class="absolute -top-6 -right-6 text-amber-100/50">
+                    <i class="fas fa-quote-right text-9xl"></i>
+                </div>
+                <h3 class="font-bold text-amber-800 mb-3 text-lg relative z-10 flex items-center gap-2">
+                    <i class="fas fa-lightbulb"></i> 網站宗旨
+                </h3>
+                <p class="relative z-10 text-amber-900/80 leading-relaxed">${desc.replace(/\n/g, '<br>')}</p>
+            `;
+        }
+
+        document.getElementById('admin-site-desc').addEventListener('input', updateSiteDescCount);
+        function updateSiteDescCount() {
+            const val = document.getElementById('admin-site-desc').value;
+            document.getElementById('site-desc-count').textContent = `${val.length}/300`;
+        }
+
+        // 新的統整儲存函式 (取代原本的 saveSiteInfo)
+        async function saveAllSiteSettings() {
+            const desc = document.getElementById('admin-site-desc').value.trim();
+            const bio = document.getElementById('admin-author-bio').value.trim();
+            
+            showGlobalLoading(true, "儲存網站與作者設定中...");
+            try {
+                const payloadData = {
+                    description: desc,
+                    authorBio: bio,
+                    authorImages: JSON.stringify(tempAuthorImages),
+                    authorLinks: JSON.stringify(tempAuthorLinks)
+                };
+
+                const res = await fetch(GOOGLE_SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'updateSiteInfo', data: payloadData }) 
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    dbSiteInfo = [payloadData];
+                    renderSiteInfo();
+                    renderAuthorProfile();
+                    showToast("設定儲存成功", "success");
+                }
+            } catch (e) {
+                showToast("儲存失敗", "error");
+            } finally {
+                showGlobalLoading(false);
+            }
+        }
+
+        // 作者簡介前台渲染與輪播邏輯
+        function renderAuthorProfile() {
+            const container = document.getElementById('author-profile-container');
+            const bioText = document.getElementById('author-bio-text');
+            const linksContainer = document.getElementById('author-links-container');
+            
+            const bio = dbSiteInfo[0]?.authorBio || "";
+            let imgs = [], links = [];
+            try { imgs = JSON.parse(dbSiteInfo[0]?.authorImages || "[]"); } catch(e){}
+            try { links = JSON.parse(dbSiteInfo[0]?.authorLinks || "[]"); } catch(e){}
+
+            if (!bio && imgs.length === 0 && links.length === 0) {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+            bioText.textContent = bio;
+
+            linksContainer.innerHTML = links.map(link => `
+                <a href="${link.url}" target="_blank" class="bg-white border-2 border-pink-300 text-pink-600 font-bold px-4 py-1.5 rounded-full hover:bg-pink-50 hover:-translate-y-1 transition transform shadow-sm text-sm flex items-center gap-2">
+                    <i class="fas fa-link"></i> ${link.title}
+                </a>
+            `).join('');
+
+            clearInterval(authorCarouselInterval);
+            const imgEl = document.getElementById('author-carousel-img');
+            const iconEl = document.getElementById('author-carousel-icon');
+            
+            if (imgs.length === 0) {
+                imgEl.classList.add('hidden');
+                iconEl.classList.remove('hidden');
+            } else {
+                imgEl.classList.remove('hidden');
+                iconEl.classList.add('hidden');
+                imgEl.src = imgs[0];
+                imgEl.style.opacity = 1;
+
+                if (imgs.length > 1) {
+                    currentAuthorImgIndex = 0;
+                    authorCarouselInterval = setInterval(() => {
+                        imgEl.style.opacity = 0; 
+                        setTimeout(() => {
+                            currentAuthorImgIndex = (currentAuthorImgIndex + 1) % imgs.length;
+                            imgEl.src = imgs[currentAuthorImgIndex];
+                            imgEl.style.opacity = 1; 
+                        }, 300);
+                    }, 5000);
+                }
+            }
+        }
+
+        // 作者簡介後台 UI 邏輯
+        function renderAdminAuthorImgs() {
+            const list = document.getElementById('admin-author-img-list');
+            if(tempAuthorImages.length === 0) {
+                list.innerHTML = `<div class="text-xs text-pink-400 italic py-2">尚未加入圖片</div>`;
+                return;
+            }
+            list.innerHTML = tempAuthorImages.map((url, idx) => `
+                <div class="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-pink-200 group">
+                    <img src="${url}" class="w-full h-full object-cover">
+                    <button onclick="removeAuthorImg(${idx})" class="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addAuthorImg() {
+            const input = document.getElementById('new-author-img');
+            const url = input.value.trim();
+            if(url) {
+                tempAuthorImages.push(url);
+                input.value = '';
+                renderAdminAuthorImgs();
+            }
+        }
+        function removeAuthorImg(idx) {
+            tempAuthorImages.splice(idx, 1);
+            renderAdminAuthorImgs();
+        }
+
+        function renderAdminAuthorLinks() {
+            const list = document.getElementById('admin-author-link-list');
+            if(tempAuthorLinks.length === 0) {
+                list.innerHTML = `<li class="text-xs text-purple-400 italic py-1">尚未加入連結</li>`;
+                return;
+            }
+            list.innerHTML = tempAuthorLinks.map((link, idx) => `
+                <li class="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100 shadow-sm">
+                    <div class="flex items-center gap-2 overflow-hidden text-sm">
+                        <span class="font-bold text-purple-700 whitespace-nowrap">${link.title}</span>
+                        <span class="text-gray-400 text-xs truncate max-w-[200px]">${link.url}</span>
+                    </div>
+                    <button onclick="removeAuthorLink(${idx})" class="text-red-400 hover:text-red-600 px-2"><i class="fas fa-times"></i></button>
+                </li>
+            `).join('');
+        }
+
+        function addAuthorLink() {
+            const titleInput = document.getElementById('new-link-title');
+            const urlInput = document.getElementById('new-link-url');
+            const title = titleInput.value.trim();
+            const url = urlInput.value.trim();
+            if(!title || !url) {
+                showToast("標題與網址都不能為空喔！", "error");
+                return;
+            }
+            tempAuthorLinks.push({ title, url });
+            titleInput.value = ''; urlInput.value = '';
+            renderAdminAuthorLinks();
+        }
+        function removeAuthorLink(idx) {
+            tempAuthorLinks.splice(idx, 1);
+            renderAdminAuthorLinks();
+        }
+
+        function renderAdminBanners() {
+            const list = document.getElementById('admin-banner-list');
+            if (dbBanners.length === 0) {
+                list.innerHTML = `<li class="text-gray-400 text-sm italic">尚無自訂橫幅，目前顯示系統預設畫面。</li>`;
+                return;
+            }
+            list.innerHTML = dbBanners.map(b => `
+                <li class="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-12 h-12 bg-gray-100 rounded shrink-0 overflow-hidden flex justify-center items-center">
+                            ${b.imageUrl ? `<img src="${b.imageUrl}" class="w-full h-full object-cover">` : '<i class="fas fa-image text-gray-400"></i>'}
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm text-gray-800 line-clamp-1">${b.title}</div>
+                            <div class="text-[10px] text-gray-500 line-clamp-1">${b.desc}</div>
+                        </div>
+                    </div>
+                    <button onclick="deleteBanner('${b.id}')" class="text-red-400 hover:text-red-600 px-3"><i class="fas fa-trash-alt"></i></button>
+                </li>
+            `).join('');
+        }
+
+        async function addBanner() {
+            const title = document.getElementById('new-banner-title').value.trim();
+            const desc = document.getElementById('new-banner-desc').value.trim();
+            const img = document.getElementById('new-banner-image').value.trim();
+            
+            if (!title) { showToast("請輸入橫幅標題", "error"); return; }
+
+            showGlobalLoading(true, "新增橫幅中...");
+            try {
+                const payload = { action: 'addBanner', data: { title: title, desc: desc, imageUrl: img } };
+                const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    dbBanners.push({ id: result.id, title, desc, imageUrl: img });
+                    document.getElementById('new-banner-title').value = '';
+                    document.getElementById('new-banner-desc').value = '';
+                    document.getElementById('new-banner-image').value = '';
+                    renderAdminBanners();
+                    currentBannerIndex = 0; 
+                    renderBanners();
+                    showToast("橫幅新增成功", "success");
+                }
+            } catch(e) { showToast("新增失敗", "error"); }
+            finally { showGlobalLoading(false); }
+        }
+
+        async function deleteBanner(id) {
+            if(!confirm("確定刪除這個橫幅嗎？")) return;
+            showGlobalLoading(true, "刪除橫幅中...");
+            try {
+                const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteBanner', data: { id: id } }) });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    dbBanners = dbBanners.filter(b => b.id !== id);
+                    renderAdminBanners();
+                    currentBannerIndex = 0;
+                    renderBanners();
+                    showToast("已刪除橫幅", "success");
+                }
+            } catch (e) { showToast("刪除失敗", "error"); }
+            finally { showGlobalLoading(false); }
+        }
+
+        // ==========================================
+        // 版主登入與文章管理
+        // ==========================================
+        function checkAdminAccess() {
+            isAdmin ? switchView('admin') : switchView('login');
+        }
+
+        async function verifyAdmin() {
+            const passcode = document.getElementById('admin-passcode').value.trim();
+            if (!passcode) { showToast("請輸入通行碼", "error"); return; }
+            const btnText = document.getElementById('btn-login-text'), btnLoader = document.getElementById('btn-login-loader');
+            btnText.classList.add('hidden'); btnLoader.classList.remove('hidden');
+
+            try {
+                const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyPasscode', data: { passcode } }) });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    isAdmin = true;
+                    document.getElementById('admin-passcode').value = '';
+                    showToast("驗證成功", "success");
+                    switchView('admin');
+                } else showToast(result.message || "通行碼錯誤", "error");
+            } catch (err) { showToast("連線錯誤", "error"); } 
+            finally { btnText.classList.remove('hidden'); btnLoader.classList.add('hidden'); }
+        }
+
+        function renderAdminArticles() {
+            const list = document.getElementById('admin-article-list');
+            if (dbArticles.length === 0) { list.innerHTML = `<li class="p-6 text-center text-gray-500">目前沒有文章，請先發布一篇吧！</li>`; return; }
+            list.innerHTML = dbArticles.map(art => `
+                <li class="p-4 flex items-center justify-between hover:bg-gray-50 gap-4">
+                    <div class="flex-1">
+                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">${art.category || '未分類'}</span>
+                        <h4 class="font-bold text-gray-800 text-base mt-2">${art.title}</h4>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="editArticle('${art.id}')" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-100 transition">編輯</button>
+                        <button onclick="deleteArticle('${art.id}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-red-100 transition"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function editArticle(id) {
+            const art = dbArticles.find(a => a.id === id);
+            if (!art) return;
+            editingArticleId = id;
+            document.getElementById('admin-title').value = art.title;
+            document.getElementById('admin-summary').value = art.desc;
+            document.getElementById('admin-category').value = art.category;
+            document.getElementById('admin-image').value = art.imageUrl;
+            document.getElementById('admin-content').value = art.content;
+            try { selectedTagsForPost = JSON.parse(art.tags || "[]"); } catch(e) { selectedTagsForPost = []; }
+            
+            document.getElementById('btn-publish-text').textContent = "儲存修改";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            renderAdminTags(); updateAdminPreview(); switchAdminTab('publish');
+            showToast("已載入文章資料", "success");
+        }
+
+        function resetAdminForm() {
+            editingArticleId = null;
+            ['title', 'summary', 'image', 'content'].forEach(id => document.getElementById(`admin-${id}`).value = '');
+            selectedTagsForPost = [];
+            document.getElementById('btn-publish-text').textContent = "儲存並發布上架";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            renderAdminTags(); updateAdminPreview();
+        }
+
+        async function deleteArticle(id) {
+            if(!confirm("確定要刪除這篇文章嗎？")) return;
+            showGlobalLoading(true, "刪除中...");
+            try {
+                const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteArticle', data: { id } }) });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    dbArticles = dbArticles.filter(a => a.id !== id);
+                    if (editingArticleId === id) resetAdminForm();
+                    renderAdminArticles(); sortAndRenderArticles();
+                    showToast("已刪除", "success");
+                }
+            } catch (error) { showToast("刪除失敗", "error"); } finally { showGlobalLoading(false); }
+        }
+
+        async function publishArticle() {
+            const title = document.getElementById('admin-title').value.trim();
+            const content = document.getElementById('admin-content').value.trim();
+            if (!title || !content) { showToast("標題與內文不能為空", "error"); return; }
+            
+            const articleData = {
+                title, content,
+                desc: document.getElementById('admin-summary').value.trim(),
+                category: document.getElementById('admin-category').value,
+                imageUrl: document.getElementById('admin-image').value.trim(),
+                tags: JSON.stringify(selectedTagsForPost)
+            };
+            const isUpdate = (editingArticleId !== null);
+            if (isUpdate) articleData.id = editingArticleId;
+
+            showGlobalLoading(true, "儲存中...");
+            try {
+                const payload = { action: isUpdate ? 'updateArticle' : 'addArticle', data: articleData };
+                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (isUpdate) {
+                        const index = dbArticles.findIndex(a => a.id === editingArticleId);
+                        if(index > -1) dbArticles[index] = { ...dbArticles[index], ...articleData };
+                    } else {
+                        articleData.id = result.id; 
+                        articleData.timestamp = new Date().toISOString();
+                        articleData.views = 0;
+                        dbArticles.unshift(articleData); 
+                    }
+                    resetAdminForm(); renderAdminArticles(); sortAndRenderArticles(); switchAdminTab('manage');
+                    showToast(isUpdate ? "修改成功" : "發布成功", "success");
+                }
+            } catch (error) { showToast("儲存失敗", "error"); } finally { showGlobalLoading(false); }
+        }
+
+        // ==========================================
+        // 分類與標籤渲染
+        // ==========================================
+        function renderCategories() {
+            const selectContainer = document.getElementById('admin-category');
+            if (selectContainer) selectContainer.innerHTML = dbCategories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            
+            const listContainer = document.getElementById('admin-category-list');
+            if (listContainer) {
+                listContainer.innerHTML = dbCategories.map(c => `<span class="bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2">${c.name} <button onclick="deleteCategory('${c.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button></span>`).join('');
+            }
+        }
+        
+        async function addNewCategory() {
+            const input = document.getElementById('new-category-name');
+            const name = input.value.trim();
+            if(!name) return;
+            if(dbCategories.find(c => c.name === name)) { showToast("分類已存在", "error"); return; }
+
+            showGlobalLoading(true, "儲存分類中...");
+            try {
+                const payload = { action: 'addCategory', data: { name: name } };
+                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    dbCategories.push({ id: result.id, name: name });
+                    input.value = '';
+                    renderCategories();
+                    showToast("主分類新增成功", "success");
+                } else throw new Error(result.message);
+            } catch (error) { showToast("新增失敗", "error"); } 
+            finally { showGlobalLoading(false); }
+        }
+
+        async function deleteCategory(id) {
+            if(confirm("確定要刪除此分類嗎？(已發布的文章將保留原有名稱)")) {
+                showGlobalLoading(true, "刪除分類中...");
+                try {
+                    const payload = { action: 'deleteCategory', data: { id: id } };
+                    const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    const result = await response.json();
+                    if(result.status === 'success') {
+                        dbCategories = dbCategories.filter(c => c.id !== id);
+                        renderCategories();
+                        showToast("主分類已刪除", "success");
+                    } else throw new Error(result.message);
+                } catch (error) { showToast("刪除失敗", "error"); } 
+                finally { showGlobalLoading(false); }
+            }
+        }
+
+        function renderHomeTags() {
+            const container = document.getElementById('home-tag-filters');
+            if(!container) return;
+
+            const isAllSelected = currentFilterTagId === null;
+            container.innerHTML = `<button onclick="filterByTag(null)" class="${isAllSelected ? 'bg-gray-800 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} px-4 py-2 rounded-full text-sm font-bold shadow-sm transition">全部顯示</button>`;
+            
+            dbTags.forEach(tag => {
+                const color = tag.color || 'gray';
+                const isSelected = currentFilterTagId === tag.id;
+                container.innerHTML += `<button onclick="filterByTag('${tag.id}')" class="${isSelected ? `bg-${color}-500 text-white border-${color}-500` : `bg-white border border-${color}-200 text-${color}-700 hover:bg-${color}-50`} px-4 py-2 rounded-full text-sm font-bold shadow-sm transition"># ${tag.name}</button>`;
+            });
+        }
+
+        function filterByTag(tagId) {
+            currentFilterTagId = tagId;
+            renderHomeTags(); 
+            sortAndRenderArticles(); 
+        }
+
+        function renderAdminTags() {
+            const container = document.getElementById('admin-tags-container');
+            if(container) {
+                container.innerHTML = dbTags.map(t => {
+                    const isSelected = selectedTagsForPost.includes(t.id);
+                    if (isSelected) {
+                        return `<button type="button" onclick="toggleTagSelection(this, '${t.id}', '${t.color}')" class="tag-btn bg-${t.color}-100 text-${t.color}-700 border border-${t.color}-300 px-3 py-1.5 rounded-lg text-sm font-bold transition ring-2 ring-${t.color}-400">${t.name}</button>`;
+                    } else {
+                        return `<button type="button" onclick="toggleTagSelection(this, '${t.id}', '${t.color}')" class="tag-btn bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-bold transition">${t.name}</button>`;
+                    }
+                }).join('');
+            }
+            
+            const list = document.getElementById('admin-tag-list');
+            if(list) {
+                list.innerHTML = dbTags.map(t => `<li class="p-4 flex items-center justify-between hover:bg-gray-50"><div class="flex items-center gap-3"><span class="w-3 h-3 rounded-full bg-${t.color}-400"></span><span class="font-bold text-gray-700">${t.name}</span></div><button onclick="deleteTagLocally('${t.id}')" class="text-red-400 hover:text-red-600 p-2"><i class="fas fa-trash-alt"></i></button></li>`).join('');
+            }
+        }
+
+        async function addNewTag() {
+            const name = document.getElementById('new-tag-name').value.trim();
+            const color = document.getElementById('new-tag-color').value;
+            if(!name) { showToast("請輸入標籤名稱", "error"); return; }
+            
+            showGlobalLoading(true, "新增標籤中...");
+            try {
+                const payload = { action: 'addTag', data: { name, color } };
+                const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    dbTags.push({ id: result.id, name, color });
+                    document.getElementById('new-tag-name').value = '';
+                    renderAdminTags();
+                    renderHomeTags();
+                    showToast("標籤新增成功", "success");
+                } else throw new Error(result.message);
+            } catch(e) { showToast("新增標籤失敗", "error"); } 
+            finally { showGlobalLoading(false); }
+        }
+
+        function toggleTagSelection(btn, tagId, color) {
+            const idx = selectedTagsForPost.indexOf(tagId);
+            if (idx > -1) {
+                selectedTagsForPost.splice(idx, 1);
+                btn.className = `tag-btn bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-bold transition`;
+            } else {
+                selectedTagsForPost.push(tagId);
+                btn.className = `tag-btn bg-${color}-100 text-${color}-700 border border-${color}-300 px-3 py-1.5 rounded-lg text-sm font-bold transition ring-2 ring-${color}-400`;
+            }
+            updateAdminPreview();
+        }
+
+        function deleteTagLocally(id) {
+            if(!confirm("確定要從畫面上移除此標籤嗎？")) return;
+            dbTags = dbTags.filter(t => t.id !== id);
+            selectedTagsForPost = selectedTagsForPost.filter(tid => tid !== id);
+            renderAdminTags();
+            renderHomeTags();
+            updateAdminPreview();
+            showToast("標籤已移除", "success");
+        }
+
+        // ==========================================
+        // 社群分享、匯出 PDF 與 本地 Word 解析 (無 AI 版)
+        // ==========================================
+        function exportToPDF() {
+            const element = document.getElementById('printable-article');
+            const title = document.getElementById('read-title').innerText || '文章分享';
+            
+            showGlobalLoading(true, "正在產生高畫質 PDF 檔案，請稍候...");
+            
+            const opt = {
+                margin:       [10, 10, 10, 10], 
+                filename:     `${title}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                showGlobalLoading(false);
+                showToast("PDF 檔案下載完成！", "success");
+            }).catch(err => {
+                showGlobalLoading(false);
+                showToast("PDF 產生失敗，請稍後再試", "error");
+                console.error(err);
+            });
+        }
+
+        function shareToLine() { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(document.title)}%0D%0A${encodeURIComponent(location.href)}`, '_blank'); }
+        function shareToFB() { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}`, '_blank', 'width=600,height=400'); }
+
+        async function handleWordUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.docx')) {
+                showToast("請上傳 .docx 格式的 Word 檔案", "error");
+                event.target.value = ''; return;
+            }
+
+            showGlobalLoading(true, "系統正在讀取並排版中...");
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                const text = result.value;
+                if (!text || text.trim() === "") throw new Error("文件內容為空");
+
+                // 在無 AI 版本中，直接呼叫本地方法處理文字
+                processArticleText(text);
+                showToast("Word 解析與排版成功！", "success");
+            } catch (error) {
+                showToast("讀取失敗，請確認檔案是否損壞", "error");
+            } finally {
+                showGlobalLoading(false);
+                event.target.value = ''; 
+            }
+        }
+
+        function processArticleText(rawText) {
+            const paragraphs = rawText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+            if (paragraphs.length === 0) return;
+
+            let title = paragraphs[0];
+            if (title.length > 50) title = title.substring(0, 50) + "...";
+            let summary = paragraphs.length > 1 ? paragraphs[1] : paragraphs[0];
+            if (summary.length > 80) summary = summary.substring(0, 80) + "...";
+
+            let contentHtml = "";
+            let quoteExtracted = false; 
+            
+            paragraphs.slice(1).forEach((p, index) => {
+                const keywords = ["發現", "其實", "重要", "分享", "陪伴", "遊戲"];
+                const isQuoteCandidate = keywords.some(k => p.includes(k)) && p.length > 15 && p.length < 80;
+
+                if (!quoteExtracted && index > 0 && isQuoteCandidate) {
+                    contentHtml += `<div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-6 my-8 rounded-r-2xl shadow-sm relative overflow-hidden group"><i class="fas fa-quote-left text-4xl text-amber-200 absolute top-4 left-4 z-0 transition-transform group-hover:scale-110"></i><p class="text-amber-800 font-bold text-lg m-0 relative z-10 pl-6 leading-relaxed">「${p}」</p></div>`;
+                    quoteExtracted = true;
+                } else if (p.length > 0 && p.length < 20 && !p.match(/[。！？]$/)) {
+                    contentHtml += `<h2>${p}</h2>`;
+                } else {
+                    contentHtml += `<p>${p}</p>`;
+                }
+            });
+
+            document.getElementById('admin-title').value = title;
+            document.getElementById('admin-summary').value = summary;
+            document.getElementById('admin-content').value = contentHtml;
+            
+            updateAdminPreview();
+            switchPreviewMode('desktop');
+        }
+
+        // ==========================================
+        // 介面切換與文章顯示
+        // ==========================================
+        function switchView(viewName) {
+            ['home', 'read', 'admin', 'login'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            window.scrollTo(0, 0); if(viewName === 'admin') updateAdminPreview();
+        }
+
+        function switchAdminTab(tabName) {
+            ['publish', 'manage', 'tags', 'settings'].forEach(t => {
+                document.getElementById(`admin-panel-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-4 font-bold text-gray-500 hover:text-amber-500";
+            });
+            document.getElementById(`admin-panel-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-4 font-bold text-amber-600 border-b-2 border-amber-600";
+        }
+
+        function sortAndRenderArticles() {
+            const sortMode = document.getElementById('sort-articles').value;
+            let displayArticles = [...dbArticles];
+            
+            if (currentFilterTagId) {
+                displayArticles = displayArticles.filter(art => {
+                    try {
+                        const tags = JSON.parse(art.tags || "[]");
+                        return tags.includes(currentFilterTagId);
+                    } catch(e) {
+                        return false;
+                    }
+                });
+            }
+
+            if (sortMode === 'popular') {
+                displayArticles.sort((a, b) => (b.views || 0) - (a.views || 0));
+            } else {
+                displayArticles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+
+            renderHomeArticles(displayArticles);
+        }
+
+        function renderHomeArticles(articlesToRender = dbArticles) {
+            const container = document.getElementById('article-list-container');
+            if (articlesToRender.length === 0) { 
+                document.getElementById('no-articles-msg').classList.remove('hidden'); 
+                container.innerHTML=''; 
+                return; 
+            }
+            document.getElementById('no-articles-msg').classList.add('hidden');
+
+            container.innerHTML = articlesToRender.map(art => {
+                let imgHtml = art.imageUrl ? `<img src="${art.imageUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : `<div class="w-full h-full bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition"><i class="fas fa-puzzle-piece text-5xl text-amber-300"></i></div>`;
+                
+                let articleTagIds = [];
+                try { articleTagIds = JSON.parse(art.tags || "[]"); } catch(e){}
+                let tagsHtml = articleTagIds.map(tid => {
+                    const t = dbTags.find(dt => dt.id == tid);
+                    return t ? `<span class="bg-${t.color}-100 text-${t.color}-700 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">${t.name}</span>` : '';
+                }).join('');
+
+                return `
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover-card cursor-pointer group flex flex-col h-full shadow-sm" onclick="openArticle('${art.id}')">
+                    <div class="h-48 relative overflow-hidden border-b border-gray-50">
+                        ${imgHtml}
+                        <div class="absolute top-3 left-3 flex gap-1 z-10">${tagsHtml}</div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="text-xs font-bold text-amber-600">${art.category || '未分類'}</div>
+                            <div class="text-[10px] text-gray-400 font-bold flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full"><i class="fas fa-fire text-orange-400"></i> ${art.views || 0}</div>
+                        </div>
+                        <h3 class="font-black text-gray-800 text-lg mb-2 leading-snug line-clamp-2">${art.title}</h3>
+                        <p class="text-sm text-gray-500 line-clamp-2 mt-auto">${art.desc}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        function openArticle(id) {
+            const art = dbArticles.find(a => a.id == id);
+            if(!art) return;
+            currentReadArticleId = id;
+
+            art.views = (art.views || 0) + 1;
+            totalSiteViews += 1;
+            document.getElementById('site-total-views').textContent = totalSiteViews.toLocaleString();
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'recordView', data: { id: id } })
+            }).catch(e => console.error("點閱紀錄失敗:", e));
+
+            document.getElementById('read-title').textContent = art.title;
+            document.getElementById('read-category').textContent = art.category || '未分類';
+            document.getElementById('read-views-count').innerHTML = `<i class="fas fa-fire mr-1"></i>${art.views} 次點閱`;
+
+            // 圖片與標題處理
+            const imgWrapper = document.getElementById('read-image-wrapper');
+            const heroImg = document.getElementById('read-hero-image');
+            if (art.imageUrl) { 
+                heroImg.src = art.imageUrl; 
+                imgWrapper.classList.remove('hidden'); 
+            } else { 
+                imgWrapper.classList.add('hidden'); 
+            }
+            
+            document.getElementById('read-content').innerHTML = art.content || "";
+            
+            let articleTagIds = [];
+            try { articleTagIds = JSON.parse(art.tags || "[]"); } catch(e){}
+            document.getElementById('read-tags').innerHTML = articleTagIds.map(tid => {
+                const t = dbTags.find(dt => dt.id == tid);
+                return t ? `<span class="bg-${t.color}-100 text-${t.color}-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm print:border print:border-gray-300"># ${t.name}</span>` : '';
+            }).join('');
+
+            switchView('read'); 
+            sortAndRenderArticles();
+        }
+
+        function showGlobalLoading(show, text="載入中...") {
+            const loader = document.getElementById('global-loading');
+            document.getElementById('loading-text').textContent = text;
+            show ? loader.classList.remove('hidden') : loader.classList.add('hidden');
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div'); toast.className = 'toast';
+            toast.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+            toast.innerHTML = `<i class="${type === 'success' ? 'fas fa-check-circle text-green-500' : 'fas fa-exclamation-circle text-red-500'} mr-2"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function switchPreviewMode(mode) {
+            const btnMobile = document.getElementById('btn-prev-mobile'), btnDesktop = document.getElementById('btn-prev-desktop');
+            const viewMobile = document.getElementById('preview-mobile-view'), viewDesktop = document.getElementById('preview-desktop-view');
+            if (mode === 'mobile') {
+                btnMobile.className = "bg-gray-800 text-white px-5 py-2 rounded-full text-sm font-bold shadow-md transition transform hover:scale-105";
+                btnDesktop.className = "bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-bold shadow-md hover:bg-gray-50 transition transform hover:scale-105";
+                viewMobile.classList.remove('hidden'); viewDesktop.classList.add('hidden'); viewDesktop.classList.remove('flex');
+            } else {
+                btnDesktop.className = "bg-gray-800 text-white px-5 py-2 rounded-full text-sm font-bold shadow-md transition transform hover:scale-105";
+                btnMobile.className = "bg-white text-gray-600 px-5 py-2 rounded-full text-sm font-bold shadow-md hover:bg-gray-50 transition transform hover:scale-105";
+                viewDesktop.classList.remove('hidden'); viewDesktop.classList.add('flex'); viewMobile.classList.add('hidden');
+            }
+        }
+
+        function updateAdminPreview() {
+            // 文字與標題同步
+            document.getElementById('prev-list-title').textContent = document.getElementById('admin-title').value || "請輸入標題";
+            
+            // 手機版清單的分類同步
+            const catSelect = document.getElementById('admin-category');
+            document.getElementById('prev-list-category').textContent = catSelect.options[catSelect.selectedIndex]?.text || "主分類";
+            
+            document.getElementById('prev-desk-title').textContent = document.getElementById('admin-title').value || "請輸入標題";
+            document.getElementById('prev-desk-content').innerHTML = document.getElementById('admin-content').value || "請輸入文章內容...";
+            
+            // 圖片即時預覽同步邏輯
+            const imgUrl = document.getElementById('admin-image').value.trim();
+            const prevListImg = document.getElementById('prev-list-img');
+            const prevListIcon = document.getElementById('prev-list-icon');
+            const prevDeskWrapper = document.getElementById('prev-desk-image-wrapper');
+            const prevDeskImg = document.getElementById('prev-desk-img');
+
+            if (imgUrl) {
+                // 手機版預覽圖
+                prevListImg.src = imgUrl;
+                prevListImg.classList.remove('hidden');
+                prevListIcon.classList.add('hidden');
+                
+                // 電腦版預覽圖與來源文字
+                prevDeskImg.src = imgUrl;
+                prevDeskWrapper.classList.remove('hidden');
+            } else {
+                // 手機版隱藏並顯示預設 icon
+                prevListImg.classList.add('hidden');
+                prevListIcon.classList.remove('hidden');
+                
+                // 電腦版隱藏圖片區塊
+                prevDeskWrapper.classList.add('hidden');
+            }
+        }
+        
+        // 綁定輸入事件，即時觸發預覽
+        ['admin-title', 'admin-summary', 'admin-image', 'admin-content'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateAdminPreview);
+        });
+    </script>
+</body>
+</html>
