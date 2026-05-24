@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>爸爸玩時間: 侯爸爸的玩轉親子靈感庫</title>
+    <!-- 新增 Open Graph Meta Tags 用於社群分享 -->
+    <meta property="og:title" content="爸爸玩時間: 侯爸爸的玩轉親子靈感庫">
+    <meta property="og:description" content="玩轉親子靈感庫">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta property="og:type" content="article">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -502,6 +508,13 @@
                     }
 
                     animateTotalViewsCounter();
+
+                    // 檢查網址列是否帶有文章參數，實現分享連結點擊後直接跳轉該文章
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const targetArticleId = urlParams.get('article');
+                    if (targetArticleId) {
+                        setTimeout(() => openArticle(targetArticleId), 100);
+                    }
                 }
             } catch (error) {
                 console.error(error);
@@ -1140,8 +1153,17 @@
             });
         }
 
-        function shareToLine() { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(document.title)}%0D%0A${encodeURIComponent(location.href)}`, '_blank'); }
-        function shareToFB() { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href)}`, '_blank', 'width=600,height=400'); }
+        function shareToLine() { 
+            const title = document.getElementById('read-title').innerText || document.title;
+            const url = location.href; // 這裡會帶有 ?article=id 的唯一網址
+            window.open(`https://line.me/R/msg/text/?${encodeURIComponent(title + '\n' + url)}`, '_blank'); 
+        }
+        
+        function shareToFB() { 
+            const title = document.getElementById('read-title').innerText || document.title;
+            const url = location.href;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`, '_blank', 'width=600,height=400'); 
+        }
 
         async function handleWordUpload(event) {
             const file = event.target.files[0];
@@ -1211,6 +1233,17 @@
             ['home', 'read', 'admin', 'login'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
             window.scrollTo(0, 0); if(viewName === 'admin') updateAdminPreview();
+
+            // 若不是在閱讀文章頁面，還原標題與網址狀態
+            if (viewName !== 'read') {
+                document.title = '爸爸玩時間: 侯爸爸的玩轉親子靈感庫';
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.pushState({path: cleanUrl}, '', cleanUrl);
+                
+                document.querySelector('meta[property="og:title"]')?.setAttribute("content", "爸爸玩時間: 侯爸爸的玩轉親子靈感庫");
+                document.querySelector('meta[property="og:image"]')?.setAttribute("content", "");
+                document.querySelector('meta[property="og:url"]')?.setAttribute("content", cleanUrl);
+            }
         }
 
         function switchAdminTab(tabName) {
@@ -1287,6 +1320,17 @@
             const art = dbArticles.find(a => a.id == id);
             if(!art) return;
             currentReadArticleId = id;
+
+            // 1. 動態更新網頁標題與網址，讓分享出去的連結具備唯一性
+            document.title = `${art.title} - 爸爸玩時間`;
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?article=' + id;
+            window.history.pushState({path: newUrl}, '', newUrl);
+
+            // 2. 動態更新 Meta Tags (幫助部分支援 JS 解析的社群平台抓取圖片與標題)
+            document.querySelector('meta[property="og:title"]')?.setAttribute("content", art.title);
+            document.querySelector('meta[property="og:description"]')?.setAttribute("content", art.desc || "");
+            if(art.imageUrl) document.querySelector('meta[property="og:image"]')?.setAttribute("content", art.imageUrl);
+            document.querySelector('meta[property="og:url"]')?.setAttribute("content", newUrl);
 
             art.views = (art.views || 0) + 1;
             totalSiteViews += 1;
