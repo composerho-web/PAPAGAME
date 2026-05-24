@@ -169,7 +169,7 @@
 
             <!-- 圖片與圖片來源區塊 -->
             <div id="read-image-wrapper" class="hidden mb-10">
-                <img id="read-hero-image" src="" alt="文章封面" class="w-full rounded-xl shadow-sm object-cover max-h-[400px]">
+                <img id="read-hero-image" src="" alt="文章封面" class="w-full rounded-xl shadow-sm h-auto">
                 <p class="text-xs text-gray-400 text-center mt-2 font-bold">圖片來源: 免費圖庫或作者提供</p>
             </div>
 
@@ -234,14 +234,19 @@
                         <textarea id="admin-summary" rows="2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">主分類</label>
-                            <select id="admin-category" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" onchange="updateAdminPreview()"></select>
-                        </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">主分類</label>
+                        <select id="admin-category" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" onchange="updateAdminPreview()"></select>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">封面圖片網址 (URL)</label>
                             <input type="text" id="admin-image" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="貼上網址即時預覽">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">補充圖片網址 (文章中段)</label>
+                            <input type="text" id="admin-supp-image" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="將自動插入文章中段">
                         </div>
                     </div>
 
@@ -251,8 +256,11 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">文章內文 (支援 HTML)</label>
-                        <textarea id="admin-content" rows="12" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none font-mono text-sm custom-scrollbar"></textarea>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block text-sm font-bold text-gray-700">文章內文 (支援 HTML)</label>
+                            <button type="button" onclick="wrapSelectedToQuote()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1 rounded text-xs font-bold transition shadow-sm"><i class="fas fa-quote-left mr-1"></i>設定為金句</button>
+                        </div>
+                        <textarea id="admin-content" rows="12" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-amber-500 outline-none font-mono text-sm custom-scrollbar" placeholder="請在此輸入或編輯內文...（可反白文字後點擊上方「設定為金句」）"></textarea>
                     </div>
                     
                     <div class="flex gap-2">
@@ -407,7 +415,7 @@
                     
                     <!-- 預覽版的圖片區塊 -->
                     <div id="prev-desk-image-wrapper" class="hidden mb-10">
-                        <img id="prev-desk-img" src="" class="w-full rounded-xl shadow-sm object-cover max-h-[300px]">
+                        <img id="prev-desk-img" src="" class="w-full rounded-xl shadow-sm h-auto">
                         <p class="text-xs text-gray-400 text-center mt-2 font-bold">圖片來源: 免費圖庫或作者提供</p>
                     </div>
 
@@ -501,6 +509,41 @@
             } finally {
                 showGlobalLoading(false);
             }
+        }
+
+        // ==========================================
+        // 內容處理小幫手 (將補充圖片安插至文章中段)
+        // ==========================================
+        function insertImageInMiddle(htmlContent, imageUrl) {
+            if (!imageUrl) return htmlContent;
+            const imgHTML = `<div class="my-10"><img src="${imageUrl}" class="w-full rounded-xl shadow-sm h-auto" alt="補充圖片"><p class="text-xs text-gray-400 text-center mt-2 font-bold">圖片來源: 作者提供</p></div>`;
+            
+            // 如果文章內容包含段落標籤 (<p>)
+            if (htmlContent.includes('</p>')) {
+                const parts = htmlContent.split('</p>');
+                // 如果至少有兩個以上的段落，就在中間段落之後插入
+                if (parts.length > 2) {
+                    let result = "";
+                    const midPoint = Math.floor((parts.length - 1) / 2); 
+                    for (let i = 0; i < parts.length; i++) {
+                        result += parts[i];
+                        if (i < parts.length - 1) result += "</p>";
+                        if (i === midPoint) result += imgHTML;
+                    }
+                    return result;
+                }
+            } 
+            
+            // 如果只有普通的換行 (純文字退路)
+            if (htmlContent.includes('\n')) {
+                const lines = htmlContent.split('\n');
+                const midPoint = Math.floor(lines.length / 2);
+                lines.splice(midPoint, 0, imgHTML);
+                return lines.join('\n');
+            }
+
+            // 如果什麼都找不到，直接加在最後面
+            return htmlContent + imgHTML;
         }
 
         // 數字滾動動畫函數
@@ -860,6 +903,8 @@
             document.getElementById('admin-summary').value = art.desc;
             document.getElementById('admin-category').value = art.category;
             document.getElementById('admin-image').value = art.imageUrl;
+            // 讀取新的補充圖片資料
+            document.getElementById('admin-supp-image').value = art.suppImageUrl || '';
             document.getElementById('admin-content').value = art.content;
             try { selectedTagsForPost = JSON.parse(art.tags || "[]"); } catch(e) { selectedTagsForPost = []; }
             
@@ -871,7 +916,8 @@
 
         function resetAdminForm() {
             editingArticleId = null;
-            ['title', 'summary', 'image', 'content'].forEach(id => document.getElementById(`admin-${id}`).value = '');
+            // 清除所有的輸入框資料 (包含新增加的補充圖片)
+            ['title', 'summary', 'image', 'supp-image', 'content'].forEach(id => document.getElementById(`admin-${id}`).value = '');
             selectedTagsForPost = [];
             document.getElementById('btn-publish-text').textContent = "儲存並發布上架";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
@@ -903,6 +949,8 @@
                 desc: document.getElementById('admin-summary').value.trim(),
                 category: document.getElementById('admin-category').value,
                 imageUrl: document.getElementById('admin-image').value.trim(),
+                // 儲存新的補充圖片資料
+                suppImageUrl: document.getElementById('admin-supp-image').value.trim(),
                 tags: JSON.stringify(selectedTagsForPost)
             };
             const isUpdate = (editingArticleId !== null);
@@ -1263,7 +1311,9 @@
                 imgWrapper.classList.add('hidden'); 
             }
             
-            document.getElementById('read-content').innerHTML = art.content || "";
+            // 加入補充圖片於文章中段
+            const rawContent = art.content || "";
+            document.getElementById('read-content').innerHTML = insertImageInMiddle(rawContent, art.suppImageUrl);
             
             let articleTagIds = [];
             try { articleTagIds = JSON.parse(art.tags || "[]"); } catch(e){}
@@ -1315,9 +1365,13 @@
             document.getElementById('prev-list-category').textContent = catSelect.options[catSelect.selectedIndex]?.text || "主分類";
             
             document.getElementById('prev-desk-title').textContent = document.getElementById('admin-title').value || "請輸入標題";
-            document.getElementById('prev-desk-content').innerHTML = document.getElementById('admin-content').value || "請輸入文章內容...";
             
-            // 圖片即時預覽同步邏輯
+            // 處理內文與動態安插補充圖片
+            const rawContent = document.getElementById('admin-content').value || "請輸入文章內容...";
+            const suppImgUrl = document.getElementById('admin-supp-image').value.trim();
+            document.getElementById('prev-desk-content').innerHTML = insertImageInMiddle(rawContent, suppImgUrl);
+            
+            // 封面圖片即時預覽同步邏輯
             const imgUrl = document.getElementById('admin-image').value.trim();
             const prevListImg = document.getElementById('prev-list-img');
             const prevListIcon = document.getElementById('prev-list-icon');
@@ -1343,10 +1397,45 @@
             }
         }
         
-        // 綁定輸入事件，即時觸發預覽
-        ['admin-title', 'admin-summary', 'admin-image', 'admin-content'].forEach(id => {
+        // 綁定輸入事件，即時觸發預覽 (加入了 admin-supp-image)
+        ['admin-title', 'admin-summary', 'admin-image', 'admin-supp-image', 'admin-content'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateAdminPreview);
         });
+
+        // ==========================================
+        // 金句設定功能
+        // ==========================================
+        function wrapSelectedToQuote() {
+            const textarea = document.getElementById('admin-content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+
+            if (start === end) {
+                showToast("請先在下方內文區反白選取想要設定為金句的文字！", "error");
+                return;
+            }
+
+            // 取得選取的文字，並濾掉可能誤選到的 HTML 段落標籤
+            const selectedText = textarea.value.substring(start, end).trim();
+            const cleanText = selectedText.replace(/<\/?p>/g, '').trim();
+            
+            const beforeText = textarea.value.substring(0, start);
+            const afterText = textarea.value.substring(end);
+
+            // 套用活潑的金句樣式
+            const quoteHtml = `\n<div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-6 my-8 rounded-r-2xl shadow-sm relative overflow-hidden group"><i class="fas fa-quote-left text-4xl text-amber-200 absolute top-4 left-4 z-0 transition-transform group-hover:scale-110"></i><p class="text-amber-800 font-bold text-lg m-0 relative z-10 pl-6 leading-relaxed">「${cleanText}」</p></div>\n`;
+
+            // 將轉換後的內容重新塞回編輯區
+            textarea.value = beforeText + quoteHtml + afterText;
+            updateAdminPreview();
+            
+            // 保持游標位置以便繼續編輯
+            textarea.focus();
+            textarea.selectionStart = start;
+            textarea.selectionEnd = start + quoteHtml.length;
+            
+            showToast("已成功將選取段落設為金句！", "success");
+        }
     </script>
 </body>
 </html>
